@@ -2,7 +2,7 @@
   "name": "simpleq",
   "description": "A super simple redis-backed queue.",
   "version": "0.0.1",
-  "author": "Jon Eisen <jon@metricfeat.com>",
+  "author": "Jon Eisen <jon@joneisen.me>",
   "scripts": {
     "test": "nodeunit tests"
   },
@@ -17,7 +17,7 @@
     "distributed",
     "redis"
   ],
-  "repository": "git://github.com/rafflecopter/simpleq.git",
+  "repository": "git://github.com/yanatan16/simpleq.git",
   "main": "lib/index",
   "dependencies": {}
 }
