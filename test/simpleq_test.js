@@ -61,6 +61,17 @@ tests.testPop = function (test) {
 	], test.done);
 };
 
+tests.testBpop = function (test) {
+	async.parallel([
+		_.bind(Q.push, Q, 'urukai'),
+		_.bind(Q.bpop, Q)
+	], function (err, results) {
+		test.ifError(err);
+		test.deepEqual(results[1], [Q._key, 'urukai']);
+		test.done();
+	});
+};
+
 tests.testPull = function (test) {
 	async.series([
 		_.bind(Q.push, Q, 'darth'),
@@ -86,7 +97,7 @@ tests.testPopPipe = function (test) {
 				cb();
 			});
 		},
-		_.bind(Q.poppipe, Q, Q2),
+		_.bind(Q.bpoppipe, Q, Q2),
 		checkByList(test, Q, ['groundcrawler']),
 		checkByList(test, Q2, ['skywalker', 'luke'])
 	], test.done);
