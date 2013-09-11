@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "author": "Jon Eisen <jon@joneisen.me>",
   "scripts": {
-    "test": "nodeunit tests"
+    "test": "nodeunit test"
   },
   "devDependencies": {
     "redis": "~0.8.4",

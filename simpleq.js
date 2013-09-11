@@ -21,11 +21,13 @@ Q.prototype.pop = function pop(cb) {
   this._redis.rpop(this._key, cb);
 };
 Q.prototype.bpop = function bpop(cb) {
-  this._redis.brpop(this._key, 0, cb);
+  this._redis.brpop(this._key, 0, function (err, result) {
+    cb(err, result && result.length === 2 && result[1]);
+  });
 };
 
 Q.prototype.pull = function pull(el, cb) {
-  this._redis.lrem(this._key, 0, el, cb);
+  this._redis.lrem(this._key, -1, el, cb);
 };
 
 Q.prototype.pullpipe = function pullpipe(otherQ, el, cb) {

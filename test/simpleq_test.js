@@ -48,6 +48,13 @@ tests.testPush = function (test) {
 
 tests.testPop = function (test) {
   async.series([
+    function (cb) {
+      Q.pop(function (err, result) {
+        test.ifError(err);
+        test.equal(result, null);
+        cb();
+      });
+    },
     _.bind(Q.push, Q, 'father'),
     _.bind(Q.push, Q, 'mother'),
     _.bind(Q.push, Q, 'baby'),
@@ -67,7 +74,7 @@ tests.testBpop = function (test) {
     _.bind(Q.bpop, Q)
   ], function (err, results) {
     test.ifError(err);
-    test.deepEqual(results[1], [Q._key, 'urukai']);
+    test.deepEqual(results[1], 'urukai');
     test.done();
   });
 };
@@ -97,7 +104,13 @@ tests.testPopPipe = function (test) {
         cb();
       });
     },
-    _.bind(Q.bpoppipe, Q, Q2),
+    function (cb) {
+      Q.bpoppipe(Q2, function (err, el) {
+        test.ifError(err);
+        test.equal(el, 'skywalker');
+        cb();
+      });
+    },
     checkByList(test, Q, ['groundcrawler']),
     checkByList(test, Q2, ['skywalker', 'luke'])
   ], test.done);
