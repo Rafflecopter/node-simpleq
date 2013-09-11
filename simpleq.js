@@ -32,7 +32,7 @@ Q.prototype.pull = function pull(el, cb) {
 
 Q.prototype.pullpipe = function pullpipe(otherQ, el, cb) {
   this._redis.multi()
-    .lrem(this._key, 0, el)
+    .lrem(this._key, -1, el)
     .lpush(otherQ._key, el)
     .exec(function (err, replies) {
       if (err) {
