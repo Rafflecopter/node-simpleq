@@ -1,0 +1,23 @@
+{
+  "name": "simpleq",
+  "description": "A super simple redis-backed queue.",
+  "version": "0.0.1",
+  "author": "Jon Eisen <jon@metricfeat.com>",
+  "scripts": {
+    "test": "nodeunit tests"
+  },
+  "devDependencies": {
+    "redis": "~0.8.4",
+    "moniker": "~0.1.2",
+    "underscore": "~1.5.2",
+    "async": "~0.2.9"
+  },
+  "keywords": [
+    "queue",
+    "distributed",
+    "redis"
+  ],
+  "repository": "git://github.com/rafflecopter/simpleq.git",
+  "main": "lib/index",
+  "dependencies": {}
+}
