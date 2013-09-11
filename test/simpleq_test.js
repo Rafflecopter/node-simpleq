@@ -2,6 +2,7 @@
 
 // vendor
 var redis = require('redis').createClient(),
+  redis2 = require('redis').createClient(),
   Moniker = require('moniker'),
   async = require('async'),
   _ = require('underscore');
@@ -11,11 +12,12 @@ var simpleq = require('../simpleq');
 
 // Setup
 var tests = exports.tests = {},
-  Q, Q2;
+  Q, Q2, Qc;
 
 tests.setUp = function setUp (callback) {
   Q = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
   Q2 = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
+  Qc = new simpleq.Q(redis2, Q._key);
   callback();
 };
 
@@ -23,7 +25,7 @@ tests.tearDown = function tearDown (callback) {
   if (Q && Q2) {
     return async.parallel([
       _.bind(Q.clear, Q),
-      _.bind(Q2.clear, Q)
+      _.bind(Q2.clear, Q2)
     ], callback);
   }
   callback();
@@ -32,6 +34,7 @@ tests.tearDown = function tearDown (callback) {
 // Clean up redis to allow a clean escape!
 exports.cleanUp = function cleanUp (test) {
   redis.end();
+  redis2.end();
   test.done();
 };
 
@@ -70,11 +73,11 @@ tests.testPop = function (test) {
 
 tests.testBpop = function (test) {
   async.parallel([
-    _.bind(Q.push, Q, 'urukai'),
-    _.bind(Q.bpop, Q)
+    _.bind(Q.bpop, Q),
+    _.bind(Qc.push, Qc, 'urukai')
   ], function (err, results) {
     test.ifError(err);
-    test.deepEqual(results[1], 'urukai');
+    test.deepEqual(results[0], 'urukai');
     test.done();
   });
 };
@@ -111,6 +114,21 @@ tests.testPopPipe = function (test) {
         cb();
       });
     },
+    checkByList(test, Q, ['groundcrawler']),
+    checkByList(test, Q2, ['skywalker', 'luke'])
+  ], test.done);
+};
+
+tests.testBpopPipe = function (test) {
+  async.series([
+    _.bind(async.parallel, null, [
+      _.bind(Q.bpoppipe, Q, Q2),
+      _.bind(Qc.push, Qc, 'luke')
+    ]),
+    _.bind(Qc.push, Qc, 'skywalker'),
+    _.bind(Qc.push, Qc, 'groundcrawler'),
+    _.bind(Q.bpoppipe, Q, Q2),
+
     checkByList(test, Q, ['groundcrawler']),
     checkByList(test, Q2, ['skywalker', 'luke'])
   ], test.done);
