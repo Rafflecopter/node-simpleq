@@ -108,7 +108,7 @@ tests.testPopPipe = function (test) {
       });
     },
     function (cb) {
-      Q.bpoppipe(Q2, function (err, el) {
+      Q.poppipe(Q2, function (err, el) {
         test.ifError(err);
         test.equal(el, 'skywalker');
         cb();
@@ -131,7 +131,12 @@ tests.testBpopPipe = function (test) {
 
     checkByList(test, Q, ['groundcrawler']),
     checkByList(test, Q2, ['skywalker', 'luke'])
-  ], test.done);
+  ], function (err, results) {
+    test.ifError(err);
+    test.equal(results[0][0],'luke');
+    test.equal(results[3], 'skywalker');
+    test.done();
+  });
 };
 
 tests.testPullPipe = function (test) {
@@ -140,9 +145,28 @@ tests.testPullPipe = function (test) {
     _.bind(Q.push, Q, 'vader'),
     _.bind(Q.push, Q, 'mothe-vada'),
     _.bind(Q.pullpipe, Q, Q2, 'vader'),
+    _.bind(Q.pullpipe, Q, Q2, 'emperor'), // This is an unsafe version of pullpipe
     checkByList(test, Q, ['mothe-vada', 'darth']),
-    checkByList(test, Q2, ['vader'])
+    checkByList(test, Q2, ['emperor', 'vader'])
   ], test.done);
+};
+
+tests.testSpullPipe = function (test) {
+  async.series([
+    _.bind(Q.push, Q, 'tobias'),
+    _.bind(Q.push, Q, 'gob'),
+    _.bind(Q.push, Q, 'maybe'),
+    _.bind(Q.spullpipe, Q, Q2, 'gob'),
+    _.bind(Q.spullpipe, Q, Q2, 'george-michael'),
+
+    checkByList(test, Q, ['maybe', 'tobias']),
+    checkByList(test, Q2, ['gob'])
+  ], function (err, results) {
+    test.ifError(err);
+    test.equal(results[3], 1);
+    test.equal(results[4], 0);
+    test.done();
+  })
 }
 
 // -- helpers --
