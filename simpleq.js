@@ -9,7 +9,7 @@ var scripts = require('./scripts'); // lua script execution
 function Q(redis, key) {
   // handle forgetting a 'new'
   if (!(this instanceof Q)) {
-    return new Q(redis);
+    return new Q(redis, key);
   }
 
   this._redis = redis;
