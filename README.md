@@ -26,6 +26,7 @@ Operations:
 - `q.pop(cb)` and `q.bpop(cb)` (blocking) Returns element popped or null
 - `q.pull(el, cb)` Pull out a specific el (the highest/oldest el in the queue to be specific if elements are repeated) from the queue. Returns number of elements removed (0 or 1).
 - `q1.pullpipe(q2, el, cb)` Pull and push into another queue atomicly. Returns elements in second queue. (Note, that if el does not exist in q1, it will still be put into q2)
+    - `q1.spullpipe(q2, el, cb)` is a safe version which will not insert el into q2 unless it has been successfully pulled out of q1. This is done atomically using a lua script.
 - `q1.poppipe(q2, cb)` and `q1.bpoppipe(q2, cb)` (blocking): Pop and push to another queue; returns popped element (also atomic).
 - `q.clear(cb)` Clear out the queue
 - `q.list(cb)` List all elements in the queue
