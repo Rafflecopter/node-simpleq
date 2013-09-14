@@ -1,14 +1,10 @@
 {
   "name": "simpleq",
   "description": "A super simple redis-backed queue.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": "Jon Eisen <jon@joneisen.me>",
   "scripts": {
     "test": "nodeunit test"
-  },
-  "devDependencies": {
-    "redis": "~0.8.4",
-    "moniker": "~0.1.2"
   },
   "keywords": [
     "queue",
@@ -17,8 +13,13 @@
   ],
   "repository": "git://github.com/yanatan16/simpleq.git",
   "main": "simpleq",
+  "license": "MIT",
   "dependencies": {
     "underscore": "~1.5.2",
     "async": "~0.2.9"
+  },
+  "devDependencies": {
+    "redis": "~0.8.4",
+    "moniker": "~0.1.2"
   }
 }
