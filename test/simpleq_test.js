@@ -17,12 +17,13 @@ var tests = exports.tests = {},
 tests.setUp = function setUp (callback) {
   Q = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
   Q2 = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
-  Qc = new simpleq.Q(redis2, Q._key);
+  Qc = Q.clone();
   callback();
 };
 
 tests.tearDown = function tearDown (callback) {
   if (Q && Q2) {
+    Qc._redis.end();
     return async.parallel([
       _.bind(Q.clear, Q),
       _.bind(Q2.clear, Q2)
@@ -82,6 +83,17 @@ tests.testBpop = function (test) {
   });
 };
 
+tests.testBpopTimeout = function (test) {
+  var start = new Date();
+  Q.bpop(1, function (err, res) {
+    test.ifError(err);
+    test.equal(res, null);
+    var time = new Date() - start;
+    test.ok(time > 999 && time < 10000, 'time: ' + time);
+    test.done();
+  });
+};
+
 tests.testPull = function (test) {
   async.series([
     _.bind(Q.push, Q, 'darth'),
@@ -135,6 +147,17 @@ tests.testBpopPipe = function (test) {
     test.ifError(err);
     test.equal(results[0][0],'luke');
     test.equal(results[3], 'skywalker');
+    test.done();
+  });
+};
+
+tests.testBpopPipeTimeout = function (test) {
+  var start = new Date();
+  Q.bpoppipe(Q2, 1, function (err, res) {
+    test.ifError(err);
+    test.equal(res, null);
+    var time = new Date() - start;
+    test.ok(time > 999 && time < 10000, 'time: ' + time);
     test.done();
   });
 };

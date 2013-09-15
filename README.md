@@ -31,6 +31,38 @@ Operations:
 - `q.clear(cb)` Clear out the queue
 - `q.list(cb)` List all elements in the queue
 
+Listeners:
+
+simpleq's can start listeners that run `bpoppipe` or `bpop` continuously and make callbacks when they occur. These two functions are `.poplisten` and `.poppipelisten`. The both accept two options:
+
+- `timeout` (default: 1) Number of seconds to timeout the blocking operation (to check for `.end()`; use 0 for infinity)
+- `max_out` (default: 0 ~ infinity) Maximum number of callbacks allowed to be out at one time.
+
+The callbacks on a message from a listener pass a done function that must be called when processing is complete. If not in the same closure, `listener.done()` and `listener.emit('done');` will suffice.
+
+_Note_: Calling listen will clone the redis connection, allowing `.push` to still work because another connection is being blocked. Calling a listen function more than once will result in a thrown error, as this is not prudent.
+
+Examples below:
+
+```javascript
+var listener = q.poplisten({timeout: 2, max_out: 10});
+
+// or
+var listener = q.poppipelistener({timeout: 2, max_out: 10});
+
+// then
+listener.on('message', function (msg, done) {
+    // do stuff
+    done();
+  }).on('error', function (err) {
+    console.error(err);
+  });
+
+// eventually
+listener.end()
+  .on('end', function whenItIsReallyReadyToEnd() {...}); // after all jobs have finished
+```
+
 ## Tests
 
 ```
