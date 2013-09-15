@@ -1,20 +1,30 @@
 // simpleq
 // A simple queuing system
 
+// vendor
+var redis = require('redis');
+
 // local
-var scripts = require('./scripts'); // lua script execution
+var scripts = require('./scripts'), // lua script execution
+  Listener = require('./listener');
 
 // -- Master Type: Q --
 // The master type, a queue of course
-function Q(redis, key) {
+function Q(redisClient, key) {
   // handle forgetting a 'new'
   if (!(this instanceof Q)) {
-    return new Q(redis, key);
+    return new Q(redisClient, key);
   }
 
-  this._redis = redis;
+  this._redis = redisClient;
   this._key = key;
 }
+
+// Clone this Q by creating a new redis connection
+Q.prototype.clone = function clone() {
+  var rclone = redis.createClient(this._redis.port, this._redis.host, this._redis.options);
+  return new Q(rclone, this._key);
+};
 
 // Push an element onto the queue
 // Returns length of queue
@@ -30,8 +40,13 @@ Q.prototype.pop = function pop(cb) {
 
 // Block and Pop an element off the queue
 // Returns element
-Q.prototype.bpop = function bpop(cb) {
-  this._redis.brpop(this._key, 0, function (err, result) {
+Q.prototype.bpop = function bpop(timeout, cb) {
+  if (cb === undefined) {
+    cb = timeout;
+    timeout = 0;
+  }
+
+  this._redis.brpop(this._key, timeout, function (err, result) {
     cb(err, result && result.length === 2 && result[1]);
   });
 };
@@ -72,8 +87,13 @@ Q.prototype.poppipe = function poppipe(otherQ, cb) {
 
 // Block and Pop an element out of a queue and put it in another queue atomically
 // Return the element being popped and pushed
-Q.prototype.bpoppipe = function bpoppipe(otherQ, cb) {
-  this._redis.brpoplpush(this._key, otherQ._key, 0, cb);
+Q.prototype.bpoppipe = function bpoppipe(otherQ, timeout, cb) {
+  if (cb === undefined) {
+    cb = timeout;
+    timeout = 0;
+  }
+
+  this._redis.brpoplpush(this._key, otherQ._key, timeout, cb);
 };
 
 // Clear the queue of elements
@@ -85,5 +105,84 @@ Q.prototype.clear = function clear(cb) {
 Q.prototype.list = function list(cb) {
   this._redis.lrange(this._key, 0, -1, cb);
 };
+
+
+// Create an event emitter for elements as we pip them
+// options:
+//  - timeout: bpop timeout (default 1) (seconds)
+//  - max_out: Maximum callbacks allowed out at once (default 0 ~ infinity)
+/*
+    var listener = q.poplisten(otherQ, {timeout: 1, max_out: 10})
+      .on('message', function (msg, done) {
+        // do something...
+        done();
+      })
+      .on('error', function (err) {...});
+    });
+
+    listener.end();
+*/
+Q.prototype.poplisten = function poplisten(options) {
+  if (this._listened) {
+    throw new Error('You can\'t call a listen function more than once. Its not prudent.');
+  }
+  this._listened = true;
+
+  options = options || {};
+
+  var timeout = options.timeout || 1,
+    max_out = options.max_out || 0,
+    clone = this.clone(),
+    blockfunc = function (callback) { clone.bpop(timeout, callback); };
+
+  var listener = new Listener(blockfunc, max_out);
+
+  listener.once('end', function () {
+    this._listened = false;
+    clone._redis.end();
+  });
+
+  return listener.start();
+};
+
+// Create an event emitter for elements as we poppipe them
+// otherQ - the otherQ parameter to poppipe
+// options:
+//  - timeout: bpoppipe timeout (default 1)
+//  - max_out: Maximum callbacks allowed out at once (default 0 ~ infinity)
+/*
+    var listener = q.poppipelisten(otherQ, {timeout: 1, max_out: 10})
+      .on('message', function (msg, done) {
+        // do something...
+        done();
+      })
+      .on('error', function (err) {...});
+    });
+
+    listener.end();
+*/
+Q.prototype.poppipelisten = function poppipelisten(otherQ, options) {
+  if (this._listened) {
+    throw new Error('You can\'t call a listen function more than once. Its not prudent.');
+  }
+  this._listened = true;
+
+  options = options || {};
+
+  var timeout = options.timeout || 1,
+    max_out = options.max_out || 0,
+    clone = this.clone(),
+    blockfunc = function (callback) { clone.bpoppipe(otherQ, timeout, callback); };
+
+  var listener = new Listener(blockfunc, max_out);
+
+  listener.once('end', function () {
+    this._listened = false;
+    clone._redis.end();
+  });
+
+  return listener.start();
+};
+
 
 exports.Q = exports.Queue = Q;
