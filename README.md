@@ -48,7 +48,7 @@ Examples below:
 var listener = q.poplisten({timeout: 2, max_out: 10});
 
 // or
-var listener = q.poppipelistener({timeout: 2, max_out: 10});
+var listener = q.poppipelistener(otherq, {timeout: 2, max_out: 10});
 
 // then
 listener.on('message', function (msg, done) {
