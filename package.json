@@ -1,7 +1,7 @@
 {
   "name": "simpleq",
   "description": "A super simple redis-backed queue.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "author": "Jon Eisen <jon@joneisen.me>",
   "scripts": {
     "test": "nodeunit test"
@@ -20,6 +20,7 @@
     "async": "~0.2.9"
   },
   "devDependencies": {
-    "moniker": "~0.1.2"
+    "moniker": "~0.1.2",
+    "longjohn": "~0.2.1"
   }
 }

@@ -34,6 +34,7 @@ function Listener(func, max_out) {
   this._max = max_out || 0;
   this._out = 0;
   this._end = false;
+  this._ended = false;
   this._listening = false;
 
   var self = this;
@@ -48,9 +49,9 @@ function Listener(func, max_out) {
     self.start();
   });
 
-  this.done = function() {
-    self.emit('done');
-  };
+  this.on('end', function () {
+    this._ended = true;
+  });
 }
 
 util.inherits(Listener, EventEmitter);
@@ -67,10 +68,29 @@ Listener.prototype.start = function () {
 };
 
 Listener.prototype.end = function () {
+  if (this._ended) {
+    // Idempotency
+    this.emit('end');
+  }
+
   this._end = true;
   return this;
 };
 
+Listener.prototype.done = function () {
+  this.emit('done');
+};
+
+Listener.prototype._create_done = function () {
+  var self = this,
+    called = false;
+  return function () {
+    if (!called) {
+      self.emit('done');
+      called = true;
+    }
+  };
+};
 
 Listener.prototype._iteration = function iteration () {
   var self = this;
@@ -84,7 +104,7 @@ Listener.prototype._iteration = function iteration () {
         self.emit('error', err);
       } else if (element) {
         self._out++;
-        self.emit('message', element, self.done);
+        self.emit('message', element, self._create_done());
       }
 
       // Requeue the iteration

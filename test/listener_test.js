@@ -1,4 +1,5 @@
 // simpleq_test.js
+require('longjohn');
 
 // vendor
 var redis = require('redis').createClient(),
@@ -90,11 +91,13 @@ tests.testListenerDone = function (test) {
     .on('error', test.ifError)
     .on('message', function (msg, done) {;
       if (msg === 'hello') {
-        setTimeout(function () { L.done(); }, 100);
+        setTimeout(function () { L.done(); test.equal(L._out, 0); }, 100);
       } else if (msg === 'world') {
-        setTimeout(function () { L.emit('done'); }, 35);
+        setTimeout(function () { L.emit('done'); test.equal(L._out, 1); }, 35);
       } else if (msg === '!') {
-        process.nextTick(done);
+        process.nextTick(function () { done(); test.equal(L._out, 2); });
+        setTimeout(function () { done(); test.equal(L._out, 2); }, 5);
+        setTimeout(function () { done(); test.equal(L._out, 2); }, 10);
 
         L.once('end', function () {
           test.equal(L._out, 0);
@@ -143,10 +146,7 @@ tests.testTimeout = function (test) {
   var start = new Date();
   L = Q.poppipelisten(Q2, {timeout: 2})
     .on('error', test.ifError)
-    .on('message', function (msg, done) {
-      test.ifError(new Error('not supposed to receive a message'));
-    })
-    .on('end', function () {
+    .once('end', function () {
       var time = new Date() - start;
       test.ok(time > 1999, 'time sould be more than 2 seconds ' + time);
       test.done();
