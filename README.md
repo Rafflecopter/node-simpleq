@@ -53,14 +53,15 @@ var listener = q.poppipelistener(otherq, {timeout: 2, max_out: 10});
 // then
 listener.on('message', function (msg, done) {
     // do stuff
-    done();
+    done(); // idempotent. you can call it more than once.
   }).on('error', function (err) {
     console.error(err);
   });
 
 // eventually
-listener.end()
-  .on('end', function whenItIsReallyReadyToEnd() {...}); // after all jobs have finished
+listener
+  .once('end', function whenItIsReallyReadyToEnd() {...}) // after all jobs have finished
+  .end(); // idempotent if you've already ended the listener
 ```
 
 ## Tests

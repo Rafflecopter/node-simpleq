@@ -157,6 +157,23 @@ tests.testTimeout = function (test) {
   });
 };
 
+tests.testEndIdempotent = function (test) {
+  L = Q.poppipelisten(Q2)
+    .on('error', test.ifError);
+
+  var c = 0;
+
+  L.on('end', function () {
+    c++;
+    if (c === 2) {
+      test.done();
+    } else if (c === 1) {
+      L.end();
+    }
+  })
+  .end();
+};
+
 // -- helpers --
 function checkByList(test, Q, exp) {
   return function (cb) {
