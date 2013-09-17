@@ -72,10 +72,6 @@ npm install --dev
 nodeunit test
 ```
 
-## Todo
-
-Add a lua script to check for errors in lrem before lpush in pullpipe command.
-
 ## License
 
 See LICENSE file.
