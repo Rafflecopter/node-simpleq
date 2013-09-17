@@ -80,5 +80,5 @@ Add a lua script to check for errors in lrem before lpush in pullpipe command.
 
 See LICENSE file.
 
-[1]: https://travis-ci.org/yanatan16/node-simpleq.png?branch=master
-[2]: http://travis-ci.org/yanatan16/node-simpleq
+[1]: https://travis-ci.org/Rafflecopter/node-simpleq.png?branch=master
+[2]: http://travis-ci.org/Rafflecopter/node-simpleq
