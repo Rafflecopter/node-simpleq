@@ -79,6 +79,12 @@ Q.prototype.spullpipe = function spullpipe(otherQ, el, cb) {
   scripts.eval(this._redis, 'safepullpipe', [this._key, otherQ._key], [el], cb);
 }
 
+// Do an atomic zrangebyscore and push to a queue
+// Used in advanced deferred task queues
+Q.prototype.zrangepush = function zrangepush(zset, min, max, callback) {
+  scripts.eval(this._redis, 'zrangepush', [zset, this._key], [min, max], callback);
+}
+
 // Pop an element out of a queue and put it in another queue atomically
 // Return the element being popped and pushed or nil
 Q.prototype.poppipe = function poppipe(otherQ, cb) {
