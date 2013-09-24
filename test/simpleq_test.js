@@ -193,16 +193,21 @@ tests.testSpullPipe = function (test) {
 }
 
 tests.testZrangePush = function (test) {
+  var zset = 'myzset:' + Moniker.choose();
   async.series([
-    _.bind(redis.zadd, redis, 'myzset', 123, 'abc'),
-    _.bind(redis.zadd, redis, 'myzset', 456, 'def'),
-    _.bind(Q.zrangepush, Q, 'myzset', 0, 200),
+    _.bind(redis.zadd, redis, zset, 123, 'abc'),
+    _.bind(redis.zadd, redis, zset, 456, 'def'),
+    _.bind(Q.zrangepush, Q, zset, 0, 200),
     checkByList(test, Q, ['abc']),
-    _.bind(redis.zcard, redis, 'myzset'),
+    _.bind(redis.zcard, redis, zset),
+    _.bind(Q.zrangepush, Q, zset, 0, 1000, false),
+    checkByList(test, Q, ['def', 'abc']),
+    _.bind(redis.zcard, redis, zset),
   ], function (err, results) {
     test.ifError(err);
     test.equal(results[4], 1);
-    test.done();
+    test.equal(results[7], 0);
+    redis.del(zset, test.done);
   });
 }
 

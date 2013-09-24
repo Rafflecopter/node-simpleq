@@ -81,8 +81,10 @@ Q.prototype.spullpipe = function spullpipe(otherQ, el, cb) {
 
 // Do an atomic zrangebyscore and push to a queue
 // Used in advanced deferred task queues
-Q.prototype.zrangepush = function zrangepush(zset, min, max, callback) {
-  scripts.eval(this._redis, 'zrangepush', [zset, this._key], [min, max], callback);
+// If remove is true or not given, this will remove all elements from the zrange.
+Q.prototype.zrangepush = function zrangepush(zset, min, max, remove, callback) {
+  if (callback === undefined) callback = remove, remove = true;
+  scripts.eval(this._redis, 'zrangepush', [zset, this._key], [min, max, remove], callback);
 }
 
 // Pop an element out of a queue and put it in another queue atomically
