@@ -1,12 +1,17 @@
 // simpleq
 // A simple queuing system
 
+// builtin
+var path = require('path');
+
 // vendor
 var redis = require('redis'),
   reval = require('redis-eval');
 
 // local
 var Listener = require('./listener');
+
+var safepullpipe_filename = path.join(__dirname, '/scripts/safepullpipe.lua');
 
 // -- Master Type: Q --
 // The master type, a queue of course
@@ -76,7 +81,7 @@ Q.prototype.pullpipe = function pullpipe(otherQ, el, cb) {
 // If the element does not exist in the queue, it is not inserted in the second queue
 // Returns 0 for non-existance in first queue, or length of second queue
 Q.prototype.spullpipe = function spullpipe(otherQ, el, cb) {
-  reval(this._redis, __dirname + '/scripts/safepullpipe.lua', [this._key, otherQ._key], [el], cb);
+  reval(this._redis, safepullpipe_filename, [this._key, otherQ._key], [el], cb);
 }
 
 // Pop an element out of a queue and put it in another queue atomically
