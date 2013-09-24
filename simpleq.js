@@ -2,11 +2,11 @@
 // A simple queuing system
 
 // vendor
-var redis = require('redis');
+var redis = require('redis'),
+  reval = require('redis-eval');
 
 // local
-var scripts = require('./scripts'), // lua script execution
-  Listener = require('./listener');
+var Listener = require('./listener');
 
 // -- Master Type: Q --
 // The master type, a queue of course
@@ -76,15 +76,7 @@ Q.prototype.pullpipe = function pullpipe(otherQ, el, cb) {
 // If the element does not exist in the queue, it is not inserted in the second queue
 // Returns 0 for non-existance in first queue, or length of second queue
 Q.prototype.spullpipe = function spullpipe(otherQ, el, cb) {
-  scripts.eval(this._redis, 'safepullpipe', [this._key, otherQ._key], [el], cb);
-}
-
-// Do an atomic zrangebyscore and push to a queue
-// Used in advanced deferred task queues
-// If remove is true or not given, this will remove all elements from the zrange.
-Q.prototype.zrangepush = function zrangepush(zset, min, max, remove, callback) {
-  if (callback === undefined) callback = remove, remove = true;
-  scripts.eval(this._redis, 'zrangepush', [zset, this._key], [min, max, remove], callback);
+  reval(this._redis, __dirname + '/scripts/safepullpipe.lua', [this._key, otherQ._key], [el], cb);
 }
 
 // Pop an element out of a queue and put it in another queue atomically

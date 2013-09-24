@@ -11,13 +11,14 @@
     "distributed",
     "redis"
   ],
-  "repository": "git://github.com/Rafflecopter/simpleq.git",
+  "repository": "git://github.com/Rafflecopter/node-simpleq.git",
   "main": "simpleq",
   "license": "MIT",
   "dependencies": {
     "underscore": "~1.5.2",
     "redis": "~0.8.4",
-    "async": "~0.2.9"
+    "async": "~0.2.9",
+    "redis-eval": "~0.1.0"
   },
   "devDependencies": {
     "moniker": "~0.1.2",

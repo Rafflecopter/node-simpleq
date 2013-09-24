@@ -30,7 +30,6 @@ Operations:
 - `q1.poppipe(q2, cb)` and `q1.bpoppipe(q2, cb)` (blocking): Pop and push to another queue; returns popped element (also atomic).
 - `q.clear(cb)` Clear out the queue
 - `q.list(cb)` List all elements in the queue
-- `q.zrangepush(zset, min, max, cb)` Do a zrangebyscore, then a zremrangebyscore, then an lpush for all elements into the queue. This is a useful function for higher level applications.
 
 Listeners:
 
