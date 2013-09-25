@@ -142,21 +142,6 @@ tests.testMaximumOut = function (test) {
   Q.push('!', test.ifError);
 };
 
-tests.testTimeout = function (test) {
-  var start = new Date();
-  L = Q.poppipelisten(Q2, {timeout: 2})
-    .on('error', test.ifError)
-    .once('end', function () {
-      var time = new Date() - start;
-      test.ok(time > 1999, 'time sould be more than 2 seconds ' + time);
-      test.done();
-    });
-
-  process.nextTick(function () {
-    L.end();
-  });
-};
-
 tests.testEndIdempotent = function (test) {
   L = Q.poppipelisten(Q2)
     .on('error', test.ifError);

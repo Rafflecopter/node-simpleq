@@ -114,10 +114,9 @@ Q.prototype.list = function list(cb) {
 
 // Create an event emitter for elements as we pip them
 // options:
-//  - timeout: bpop timeout (default 1) (seconds)
 //  - max_out: Maximum callbacks allowed out at once (default 0 ~ infinity)
 /*
-    var listener = q.poplisten(otherQ, {timeout: 1, max_out: 10})
+    var listener = q.poplisten(otherQ, {max_out: 10})
       .on('message', function (msg, done) {
         // do something...
         done();
@@ -135,10 +134,9 @@ Q.prototype.poplisten = function poplisten(options) {
 
   options = options || {};
 
-  var timeout = options.timeout || 1,
-    max_out = options.max_out || 0,
+  var max_out = options.max_out || 0,
     clone = this.clone(),
-    blockfunc = function (callback) { clone.bpop(timeout, callback); };
+    blockfunc = function (callback) { clone.bpop(0, callback); };
 
   var listener = new Listener(blockfunc, max_out);
 
@@ -153,10 +151,9 @@ Q.prototype.poplisten = function poplisten(options) {
 // Create an event emitter for elements as we poppipe them
 // otherQ - the otherQ parameter to poppipe
 // options:
-//  - timeout: bpoppipe timeout (default 1)
 //  - max_out: Maximum callbacks allowed out at once (default 0 ~ infinity)
 /*
-    var listener = q.poppipelisten(otherQ, {timeout: 1, max_out: 10})
+    var listener = q.poppipelisten(otherQ, {max_out: 10})
       .on('message', function (msg, done) {
         // do something...
         done();
@@ -174,10 +171,9 @@ Q.prototype.poppipelisten = function poppipelisten(otherQ, options) {
 
   options = options || {};
 
-  var timeout = options.timeout || 1,
-    max_out = options.max_out || 0,
+  var max_out = options.max_out || 0,
     clone = this.clone(),
-    blockfunc = function (callback) { clone.bpoppipe(otherQ, timeout, callback); };
+    blockfunc = function (callback) { clone.bpoppipe(otherQ, 0, callback); };
 
   var listener = new Listener(blockfunc, max_out);
 

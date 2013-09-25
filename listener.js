@@ -68,6 +68,8 @@ Listener.prototype.start = function () {
 };
 
 Listener.prototype.end = function () {
+  this._ended = this._ended || this._out === 0;
+
   if (this._ended) {
     // Idempotency
     this.emit('end');
