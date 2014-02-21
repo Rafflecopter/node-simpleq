@@ -50,10 +50,15 @@ var listener = q.poplisten({max_out: 10});
 var listener = q.poppipelistener(otherq, {max_out: 10});
 
 // then
-listener.on('message', function (msg, done) {
+listener
+  .on('ready', function () {
+    // listener is ready to go and running
+  })
+  .on('message', function (msg, done) {
     // do stuff
     done(); // idempotent. you can call it more than once.
-  }).on('error', function (err) {
+  })
+  .on('error', function (err) {
     console.error(err);
   });
 
