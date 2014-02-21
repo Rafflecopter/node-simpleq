@@ -1,8 +1,8 @@
 // simpleq_test.js
 
 // vendor
-var redis = require('redis').createClient(),
-  redis2 = require('redis').createClient(),
+var redis = require('redis').createClient(6379, 'localhost', { enable_offline_queue: false }),
+  redis2 = require('redis').createClient(6379, 'localhost', { enable_offline_queue: false }),
   Moniker = require('moniker'),
   async = require('async'),
   _ = require('underscore');
@@ -15,10 +15,18 @@ var tests = exports.tests = {},
   Q, Q2, Qc;
 
 tests.setUp = function setUp (callback) {
-  Q = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
-  Q2 = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
-  Qc = Q.clone();
-  callback();
+  async.parallel([
+    redis.ready ? function (cb) {cb()} : redis.on.bind(redis, 'ready'),
+    redis2.ready ? function (cb) {cb()} : redis2.on.bind(redis2, 'ready')
+  ], function () {
+    Q = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
+    Q2 = new simpleq.Q(redis2, 'simpleq-test:' + Moniker.choose());
+    Q.clone(function (err, qc) {
+      Qc = qc
+
+      callback(err)
+    });
+  })
 };
 
 tests.tearDown = function tearDown (callback) {
@@ -75,7 +83,7 @@ tests.testPop = function (test) {
 tests.testBpop = function (test) {
   async.parallel([
     _.bind(Q.bpop, Q),
-    _.bind(Qc.push, Qc, 'urukai')
+    _.bind(Qc.push, Qc, 'urukai'),
   ], function (err, results) {
     test.ifError(err);
     test.deepEqual(results[0], 'urukai');

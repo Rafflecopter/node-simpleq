@@ -56,6 +56,11 @@ function Listener(func, max_out) {
 
 util.inherits(Listener, EventEmitter);
 
+Listener.prototype.ready = function () {
+  this.start()
+  this.emit('ready')
+}
+
 Listener.prototype.start = function () {
   if (this._listening || this._end) {
     // dont listen twice or listen if we've ended

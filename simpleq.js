@@ -26,9 +26,12 @@ function Q(redisClient, key) {
 }
 
 // Clone this Q by creating a new redis connection
-Q.prototype.clone = function clone() {
-  var rclone = redis.createClient(this._redis.port, this._redis.host, this._redis.options);
-  return new Q(rclone, this._key);
+Q.prototype.clone = function clone(callback) {
+  var rclone = redis.createClient(this._redis.port, this._redis.host, this._redis.options),
+    key = this._key;
+  rclone.on('ready', function () {
+    callback(null, new Q(rclone, key))
+  })
 };
 
 // Push an element onto the queue
@@ -117,6 +120,9 @@ Q.prototype.list = function list(cb) {
 //  - max_out: Maximum callbacks allowed out at once (default 0 ~ infinity)
 /*
     var listener = q.poplisten(otherQ, {max_out: 10})
+      .on('ready', function () {
+        // listener is ready to go and running
+      })
       .on('message', function (msg, done) {
         // do something...
         done();
@@ -134,18 +140,27 @@ Q.prototype.poplisten = function poplisten(options) {
 
   options = options || {};
 
-  var max_out = options.max_out || 0,
-    clone = this.clone(),
-    blockfunc = function (callback) { clone.bpop(0, callback); };
-
-  var listener = new Listener(blockfunc, max_out);
+  var max_out = options.max_out || 0
+    , clone
+    , listener = new Listener(blockfunc, max_out)
 
   listener.once('end', function () {
     this._listened = false;
     clone._redis.end();
   });
 
-  return listener.start();
+  this.clone(function (err, theclone) {
+    if (err) throw err
+
+    clone = theclone
+    listener.ready()
+  });
+
+  function blockfunc(callback) {
+    clone.bpop(0, callback);
+  };
+
+  return listener;
 };
 
 // Create an event emitter for elements as we poppipe them
@@ -154,6 +169,9 @@ Q.prototype.poplisten = function poplisten(options) {
 //  - max_out: Maximum callbacks allowed out at once (default 0 ~ infinity)
 /*
     var listener = q.poppipelisten(otherQ, {max_out: 10})
+      .on('ready', function () {
+        // listener is ready to go and running
+      })
       .on('message', function (msg, done) {
         // do something...
         done();
@@ -163,7 +181,7 @@ Q.prototype.poplisten = function poplisten(options) {
 
     listener.end();
 */
-Q.prototype.poppipelisten = function poppipelisten(otherQ, options) {
+Q.prototype.poppipelisten = function poppipelisten(otherQ, options, callback) {
   if (this._listened) {
     throw new Error('You can\'t call a listen function more than once. Its not prudent.');
   }
@@ -171,18 +189,36 @@ Q.prototype.poppipelisten = function poppipelisten(otherQ, options) {
 
   options = options || {};
 
-  var max_out = options.max_out || 0,
-    clone = this.clone(),
-    blockfunc = function (callback) { clone.bpoppipe(otherQ, 0, callback); };
-
-  var listener = new Listener(blockfunc, max_out);
+  var max_out = options.max_out || 0
+    , clone
+    , ended = false
+    , listener = new Listener(blockfunc, max_out)
 
   listener.once('end', function () {
     this._listened = false;
-    clone._redis.end();
+    if (clone)
+      clone._redis.end();
+
+    // its possible for the listener to be closed before the clone is ready
+    ended = true;
   });
 
-  return listener.start();
+  this.clone(function (err, theclone) {
+    if (err) throw err
+
+    clone = theclone
+
+    if (ended)
+      clone._redis.end()
+    else
+      listener.ready()
+  });
+
+  function blockfunc(callback) {
+    clone.bpoppipe(otherQ, 0, callback);
+  };
+
+  return listener
 };
 
 

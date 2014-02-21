@@ -2,7 +2,7 @@
 require('longjohn');
 
 // vendor
-var redis = require('redis').createClient(),
+var redis = require('redis').createClient(6379, 'localhost', { enable_offline_queue: false }),
   Moniker = require('moniker'),
   async = require('async'),
   _ = require('underscore');
@@ -15,10 +15,14 @@ var tests = exports.ListenerTest = {},
   Q, Q2, L;
 
 tests.setUp = function setUp (callback) {
-  Q = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
-  Q2 = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
-  L = null;
-  callback();
+  redis.ready ? ready() : redis.on('ready', ready)
+
+  function ready() {
+    Q = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
+    Q2 = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
+    L = null;
+    callback();
+  }
 };
 
 tests.tearDown = function tearDown (callback) {
@@ -45,19 +49,25 @@ exports.cleanUp = function cleanUp (test) {
 
 // -- Tests --
 
+tests.testReady = function (test) {
+  L = Q.poplisten()
+    .once('ready', function () {
+      setImmediate(L.end.bind(L))
+    })
+    .once('end', test.done);
+};
+
 tests.testBasicPop = function (test) {
   L = Q.poplisten()
     .on('error', test.ifError)
     .on('message', function (msg, done) {
       test.equal(msg, 'hello');
       checkByList(test, Q, [])(test.ifError);
-      process.nextTick(done);
+      setImmediate(done);
 
-      L.once('end', function (err) {
-        test.done(err);
-      })
-        .end();
-    });
+      L.end();
+    })
+    .once('end', test.done);
 
   Q.push('hello', test.ifError);
 };
@@ -67,7 +77,7 @@ tests.testBasicPopPipe = function (test) {
     .on('error', test.ifError)
     .on('message', function (msg, done) {
       test.equal(msg, 'world');
-      process.nextTick(done);
+      setImmediate(done);
 
       async.parallel([
         checkByList(test, Q, []),
@@ -95,7 +105,7 @@ tests.testListenerDone = function (test) {
       } else if (msg === 'world') {
         setTimeout(function () { L.emit('done'); test.equal(L._out, 1); }, 35);
       } else if (msg === '!') {
-        process.nextTick(function () { done(); test.equal(L._out, 2); });
+        setImmediate(function () { done(); test.equal(L._out, 2); });
         setTimeout(function () { done(); test.equal(L._out, 2); }, 5);
         setTimeout(function () { done(); test.equal(L._out, 2); }, 10);
 
