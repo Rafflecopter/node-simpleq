@@ -16,9 +16,9 @@
   "license": "MIT",
   "dependencies": {
     "underscore": "~1.5.2",
-    "redis": "~0.8.4",
     "async": "~0.2.9",
     "redis-eval": "~0.2.0",
+    "redis": "~0.10.1",
     "hiredis": "~0.1.16"
   },
   "devDependencies": {
