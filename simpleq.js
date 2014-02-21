@@ -157,7 +157,11 @@ Q.prototype.poplisten = function poplisten(options) {
   });
 
   function blockfunc(callback) {
-    clone.bpop(0, callback);
+    if (clone._redis.ready) {
+      clone.bpop(0, callback);
+    } else {
+      setTimeout(callback.bind(null, new Error('Redis connection is not ready. Cannot listen on it')), 1000);
+    }
   };
 
   return listener;
@@ -215,7 +219,11 @@ Q.prototype.poppipelisten = function poppipelisten(otherQ, options, callback) {
   });
 
   function blockfunc(callback) {
-    clone.bpoppipe(otherQ, 0, callback);
+    if (clone._redis.ready) {
+      clone.bpoppipe(otherQ, 0, callback);
+    } else {
+      setTimeout(callback.bind(null, new Error('Redis connection is not ready. Cannot listen on it')), 1000);
+    }
   };
 
   return listener
