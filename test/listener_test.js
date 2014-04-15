@@ -3,6 +3,7 @@ require('longjohn');
 
 // vendor
 var redis = require('redis').createClient(6379, 'localhost', { enable_offline_queue: false }),
+  createRedis = function () { return require('redis').createClient(6379, 'localhost', { enable_offline_queue: false }) },
   Moniker = require('moniker'),
   async = require('async'),
   _ = require('underscore');
@@ -50,7 +51,7 @@ exports.cleanUp = function cleanUp (test) {
 // -- Tests --
 
 tests.testReady = function (test) {
-  L = Q.poplisten()
+  L = Q.poplisten({redisClone: createRedis()})
     .once('ready', function () {
       setImmediate(L.end.bind(L))
     })
@@ -58,7 +59,7 @@ tests.testReady = function (test) {
 };
 
 tests.testBasicPop = function (test) {
-  L = Q.poplisten()
+  L = Q.poplisten({redisClone: createRedis()})
     .on('error', test.ifError)
     .on('message', function (msg, done) {
       test.equal(msg, 'hello');
@@ -73,7 +74,7 @@ tests.testBasicPop = function (test) {
 };
 
 tests.testBasicPopPipe = function (test) {
-  L = Q.poppipelisten(Q2)
+  L = Q.poppipelisten(Q2, {redisClone: createRedis()})
     .on('error', test.ifError)
     .on('message', function (msg, done) {
       test.equal(msg, 'world');
@@ -97,7 +98,7 @@ tests.testListenerDone = function (test) {
 
   var outexp = 3;
 
-  L = Q.poplisten()
+  L = Q.poplisten({redisClone: createRedis()})
     .on('error', test.ifError)
     .on('message', function (msg, done) {;
       if (msg === 'hello') {
@@ -130,7 +131,7 @@ tests.testListenerDone = function (test) {
 tests.testMaximumOut = function (test) {
   var out = 0, n = 0;
 
-  L = Q.poplisten({max_out: 1})
+  L = Q.poplisten({redisClone: createRedis(), max_out: 1})
     .on('error', test.ifError)
     .on('message', function (msg, done) {
       out++;
@@ -153,7 +154,7 @@ tests.testMaximumOut = function (test) {
 };
 
 tests.testEndIdempotent = function (test) {
-  L = Q.poppipelisten(Q2)
+  L = Q.poppipelisten(Q2, {redisClone: createRedis()})
     .on('error', test.ifError);
 
   var c = 0;

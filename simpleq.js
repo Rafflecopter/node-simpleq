@@ -5,8 +5,7 @@
 var path = require('path');
 
 // vendor
-var redis = require('redis'),
-  reval = require('redis-eval');
+var reval = require('redis-eval');
 
 // local
 var Listener = require('./listener');
@@ -26,11 +25,16 @@ function Q(redisClient, key) {
 }
 
 // Clone this Q by creating a new redis connection
-Q.prototype.clone = function clone(callback) {
-  var rclone = redis.createClient(this._redis.port, this._redis.host, this._redis.options),
-    key = this._key;
-  rclone.on('ready', function () {
-    callback(null, new Q(rclone, key))
+Q.prototype.clone = function clone(redisClone, callback) {
+  var key = this._key
+    , q = new Q(redisClone, key);
+
+  if (redisClone.ready) {
+    return callback(null, q);
+  }
+
+  redisClone.on('ready', function () {
+    callback(null, new Q(redisClone, key))
   })
 };
 
@@ -149,7 +153,7 @@ Q.prototype.poplisten = function poplisten(options) {
     clone._redis.end();
   });
 
-  this.clone(function (err, theclone) {
+  this.clone(options.redisClone, function (err, theclone) {
     if (err) throw err
 
     clone = theclone
@@ -185,7 +189,7 @@ Q.prototype.poplisten = function poplisten(options) {
 
     listener.end();
 */
-Q.prototype.poppipelisten = function poppipelisten(otherQ, options, callback) {
+Q.prototype.poppipelisten = function poppipelisten(otherQ, options) {
   if (this._listened) {
     throw new Error('You can\'t call a listen function more than once. Its not prudent.');
   }
@@ -207,7 +211,7 @@ Q.prototype.poppipelisten = function poppipelisten(otherQ, options, callback) {
     ended = true;
   });
 
-  this.clone(function (err, theclone) {
+  this.clone(options.redisClone, function (err, theclone) {
     if (err) throw err
 
     clone = theclone

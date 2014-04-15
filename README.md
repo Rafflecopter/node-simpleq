@@ -44,10 +44,10 @@ _Note_: Calling listen will clone the redis connection, allowing `.push` to stil
 Examples below:
 
 ```javascript
-var listener = q.poplisten({max_out: 10});
+var listener = q.poplisten({redisClone: newRedis(), max_out: 10});
 
 // or
-var listener = q.poppipelistener(otherq, {max_out: 10});
+var listener = q.poppipelistener(otherq, {redisClone: newRedis(), max_out: 10});
 
 // then
 listener

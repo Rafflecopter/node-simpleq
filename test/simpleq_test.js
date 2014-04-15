@@ -3,6 +3,7 @@
 // vendor
 var redis = require('redis').createClient(6379, 'localhost', { enable_offline_queue: false }),
   redis2 = require('redis').createClient(6379, 'localhost', { enable_offline_queue: false }),
+  redis3 = require('redis').createClient(6379, 'localhost', { enable_offline_queue: false }),
   Moniker = require('moniker'),
   async = require('async'),
   _ = require('underscore');
@@ -17,11 +18,12 @@ var tests = exports.tests = {},
 tests.setUp = function setUp (callback) {
   async.parallel([
     redis.ready ? function (cb) {cb()} : redis.on.bind(redis, 'ready'),
-    redis2.ready ? function (cb) {cb()} : redis2.on.bind(redis2, 'ready')
+    redis2.ready ? function (cb) {cb()} : redis2.on.bind(redis2, 'ready'),
+    redis3.ready ? function (cb) {cb()} : redis3.on.bind(redis3, 'ready')
   ], function () {
     Q = new simpleq.Q(redis, 'simpleq-test:' + Moniker.choose());
     Q2 = new simpleq.Q(redis2, 'simpleq-test:' + Moniker.choose());
-    Q.clone(function (err, qc) {
+    Q.clone(redis3, function (err, qc) {
       Qc = qc
 
       callback(err)
@@ -31,7 +33,6 @@ tests.setUp = function setUp (callback) {
 
 tests.tearDown = function tearDown (callback) {
   if (Q && Q2) {
-    Qc._redis.end();
     return async.parallel([
       _.bind(Q.clear, Q),
       _.bind(Q2.clear, Q2)
@@ -44,6 +45,7 @@ tests.tearDown = function tearDown (callback) {
 exports.cleanUp = function cleanUp (test) {
   redis.end();
   redis2.end();
+  redis3.end();
   test.done();
 };
 
