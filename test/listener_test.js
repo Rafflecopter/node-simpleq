@@ -94,6 +94,27 @@ tests.testBasicPopPipe = function (test) {
   Q.push('world', test.ifError);
 };
 
+tests.testTimeout = function (test) {
+  L = Q.poppipelisten(Q2, {redisClone: createRedis(), blocking_timeout: 1})
+    .on('error', test.ifError)
+    .on('message', function (msg, done) {
+      test.equal(msg, 'world');
+      setImmediate(done);
+
+      async.parallel([
+        checkByList(test, Q, []),
+        checkByList(test, Q2, ['world'])
+      ], function (e,r) {
+        L.once('end', function (err) {
+          test.done(err);
+        })
+        .end();
+      });
+    });
+
+  setTimeout(function () {Q.push('world', test.ifError);}, 2000)
+};
+
 tests.testListenerDone = function (test) {
 
   var outexp = 3;
