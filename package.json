@@ -17,7 +17,7 @@
   "dependencies": {
     "underscore": "~1.5.2",
     "async": "~0.2.9",
-    "redis-eval": "~0.2.2"
+    "redis-eval": "git+ssh://git@github.com:Rafflecopter/node-redis-eval"
   },
   "devDependencies": {
     "moniker": "~0.1.2",
